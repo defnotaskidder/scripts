@@ -2662,14 +2662,14 @@ local Library; do
             canvas.Size = UDim2.new(1, 0, 1, 0)
             canvas.BackgroundTransparency = 1
             canvas.BorderSizePixel = 0
-            canvas.GroupTransparency = 1 -- starts invisible
+            canvas.GroupTransparency = 0 -- starts visible immediately
             canvas.Parent = loadGui
 
-            -- Floating card (glassmorphism, centered)
+            -- Floating card (glassmorphism, centered, NO black screen)
             local card = Instance.new("Frame")
             card.Name = "Card"
             card.AnchorPoint = Vector2.new(0.5, 0.5)
-            card.Position = UDim2.new(0.5, 0, 0.5, 15) -- starts slightly below center
+            card.Position = UDim2.new(0.5, 0, 0.5, 0)
             card.Size = UDim2.new(0, 220, 0, 200)
             card.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
             card.BackgroundTransparency = 0.15
@@ -2931,28 +2931,16 @@ local Library; do
                 end
             end)
 
-            -- === ENTRANCE ===
-            task.spawn(function()
-                -- Fade in + float up
-                TweenService:Create(canvas, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    GroupTransparency = 0
-                }):Play()
-                TweenService:Create(card, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(0.5, 0, 0.5, 0)
-                }):Play()
+            -- === ENTRANCE (runs immediately, no task.spawn) ===
+            -- Top glow line expands
+            TweenService:Create(topGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0.7, 0, 0, 2)
+            }):Play()
 
-                -- Top glow line expands
-                task.wait(0.2)
-                TweenService:Create(topGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0.7, 0, 0, 2)
-                }):Play()
-
-                -- Start progress bar
-                task.wait(0.2)
-                TweenService:Create(barFill, TweenInfo.new(duration - 1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                    Size = UDim2.new(1, 0, 1, 0)
-                }):Play()
-            end)
+            -- Start progress bar fill
+            TweenService:Create(barFill, TweenInfo.new(math.max(duration - 0.5, 0.5), Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(1, 0, 1, 0)
+            }):Play()
 
             -- === CLOSE ===
             loadingObj.Close = function(_)
