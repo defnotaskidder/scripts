@@ -1672,7 +1672,7 @@ local Library; do
 
             local Cfg = {
                 Size = Data.Size or UDim2.new(0, 730, 0, 550),
-                Icon = Data.Icon or "rbxassetid://136503114086494",
+                Icon = Data.Icon or "rbxassetid://133116084704771",
                 TabInfo,
 
                 Mobile = Data.Mobile or false, 
@@ -2624,13 +2624,231 @@ local Library; do
     end 
 
     Library:Connect(Services.RunService.Heartbeat, function()
-        if not (Library.LerpObjects) then 
-            return 
-        end     
+        if not (Library.LerpObjects) then
+            return
+        end
 
         Library:LerpObjects()
         Library:LerpKeybinds()
     end)
+
+    -- // Notification System
+    do
+        local NotifGui = Library:Create("ScreenGui", {
+            Parent = Services.CoreGui,
+            Name = "\0",
+            Enabled = true,
+            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+            IgnoreGuiInset = true,
+            DisplayOrder = 1000002,
+        })
+
+        local NotifHolder = Library:Create("Frame", {
+            Parent = NotifGui.Instance,
+            BackgroundTransparency = 1,
+            AnchorPoint = Vector2.new(1, 1),
+            Position = UDim2.new(1, -20, 1, -20),
+            Size = UDim2.new(0, 300, 1, -40),
+            BorderSizePixel = 0,
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        })
+
+        Library:Create("UIListLayout", {
+            Parent = NotifHolder.Instance,
+            Padding = UDim.new(0, 8),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            VerticalAlignment = Enum.VerticalAlignment.Bottom,
+            HorizontalAlignment = Enum.HorizontalAlignment.Right,
+        })
+
+        local notifCount = 0
+
+        Library.Notify = function(self, Data)
+            if type(Data) == "string" then
+                Data = { Title = "Notification", Description = Data, Duration = 5 }
+            end
+
+            Data = Data or {}
+            local title = Data.Title or "Notification"
+            local desc = Data.Description or Data.Text or Data.Content or ""
+            local duration = Data.Duration or 5
+            local icon = Data.Icon or nil
+
+            notifCount += 1
+            local order = notifCount
+
+            -- Main container
+            local notif = Instance.new("CanvasGroup")
+            notif.Name = "Notification_" .. order
+            notif.LayoutOrder = -order
+            notif.BackgroundTransparency = 1
+            notif.Size = UDim2.new(1, 0, 0, 0)
+            notif.AutomaticSize = Enum.AutomaticSize.Y
+            notif.GroupTransparency = 1
+            notif.Parent = NotifHolder.Instance
+
+            -- Background
+            local bg = Instance.new("Frame")
+            bg.Name = "Background"
+            bg.Size = UDim2.new(1, 0, 0, 0)
+            bg.AutomaticSize = Enum.AutomaticSize.Y
+            bg.BackgroundColor3 = Themes.Preset["Background"]
+            bg.BackgroundTransparency = 0.05
+            bg.BorderSizePixel = 0
+            bg.Parent = notif
+
+            -- Themify background
+            local function themeUpdate()
+                bg.BackgroundColor3 = Themes.Preset["Background"]
+            end
+
+            local bgCorner = Instance.new("UICorner")
+            bgCorner.CornerRadius = UDim.new(0, 10)
+            bgCorner.Parent = bg
+
+            -- Accent stroke with gradient
+            local stroke = Instance.new("UIStroke")
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            stroke.Thickness = 1.5
+            stroke.Transparency = 0.5
+            stroke.Parent = bg
+
+            local strokeGrad = Instance.new("UIGradient")
+            strokeGrad.Color = ColorSeq{
+                ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
+                ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
+            }
+            strokeGrad.Parent = stroke
+
+            -- Inner padding
+            local padding = Instance.new("UIPadding")
+            padding.PaddingTop = UDim.new(0, 10)
+            padding.PaddingBottom = UDim.new(0, 10)
+            padding.PaddingLeft = UDim.new(0, 12)
+            padding.PaddingRight = UDim.new(0, 12)
+            padding.Parent = bg
+
+            -- Content layout
+            local layout = Instance.new("UIListLayout")
+            layout.SortOrder = Enum.SortOrder.LayoutOrder
+            layout.Padding = UDim.new(0, 4)
+            layout.Parent = bg
+
+            -- Top row (icon + title + close)
+            local topRow = Instance.new("Frame")
+            topRow.Name = "TopRow"
+            topRow.Size = UDim2.new(1, 0, 0, 18)
+            topRow.BackgroundTransparency = 1
+            topRow.LayoutOrder = 1
+            topRow.Parent = bg
+
+            -- Icon (optional)
+            if icon then
+                local iconImg = Instance.new("ImageLabel")
+                iconImg.Name = "Icon"
+                iconImg.Size = UDim2.new(0, 16, 0, 16)
+                iconImg.Position = UDim2.new(0, 0, 0.5, 0)
+                iconImg.AnchorPoint = Vector2.new(0, 0.5)
+                iconImg.BackgroundTransparency = 1
+                iconImg.Image = icon
+                iconImg.ImageColor3 = Themes.Preset["TextColor"]
+                iconImg.Parent = topRow
+
+                local iconGrad = Instance.new("UIGradient")
+                iconGrad.Color = ColorSeq{
+                    ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
+                    ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
+                }
+                iconGrad.Parent = iconImg
+            end
+
+            -- Title
+            local titleLabel = Instance.new("TextLabel")
+            titleLabel.Name = "Title"
+            titleLabel.Size = UDim2.new(1, icon and -20 or 0, 1, 0)
+            titleLabel.Position = UDim2.new(0, icon and 20 or 0, 0, 0)
+            titleLabel.BackgroundTransparency = 1
+            titleLabel.Text = title
+            titleLabel.TextColor3 = Themes.Preset["TextColor"]
+            titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            titleLabel.TextSize = 13
+            titleLabel.Font = Enum.Font.GothamBold
+            titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            titleLabel.Parent = topRow
+
+            -- Description
+            if desc ~= "" then
+                local descLabel = Instance.new("TextLabel")
+                descLabel.Name = "Description"
+                descLabel.Size = UDim2.new(1, 0, 0, 0)
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
+                descLabel.BackgroundTransparency = 1
+                descLabel.Text = desc
+                descLabel.TextColor3 = Themes.Preset["TextLowContrast"]
+                descLabel.TextXAlignment = Enum.TextXAlignment.Left
+                descLabel.TextSize = 12
+                descLabel.Font = Enum.Font.Gotham
+                descLabel.TextWrapped = true
+                descLabel.LayoutOrder = 2
+                descLabel.Parent = bg
+            end
+
+            -- Progress bar
+            local barBg = Instance.new("Frame")
+            barBg.Name = "BarBackground"
+            barBg.Size = UDim2.new(1, 0, 0, 3)
+            barBg.BackgroundColor3 = Themes.Preset["ElementBackground"]
+            barBg.BorderSizePixel = 0
+            barBg.LayoutOrder = 3
+            barBg.Parent = bg
+
+            local barCorner = Instance.new("UICorner")
+            barCorner.CornerRadius = UDim.new(0, 2)
+            barCorner.Parent = barBg
+
+            local barFill = Instance.new("Frame")
+            barFill.Name = "Fill"
+            barFill.Size = UDim2.new(1, 0, 1, 0)
+            barFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            barFill.BorderSizePixel = 0
+            barFill.Parent = barBg
+
+            local barFillCorner = Instance.new("UICorner")
+            barFillCorner.CornerRadius = UDim.new(0, 2)
+            barFillCorner.Parent = barFill
+
+            local barGrad = Instance.new("UIGradient")
+            barGrad.Color = ColorSeq{
+                ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
+                ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
+            }
+            barGrad.Parent = barFill
+
+            -- Slide in
+            local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+            Services.TweenService:Create(notif, tweenInfo, { GroupTransparency = 0 }):Play()
+
+            -- Countdown bar
+            task.spawn(function()
+                local start = tick()
+                while tick() - start < duration do
+                    local elapsed = tick() - start
+                    local remaining = math.clamp(1 - (elapsed / duration), 0, 1)
+                    barFill.Size = UDim2.new(remaining, 0, 1, 0)
+                    task.wait()
+                end
+
+                -- Fade out
+                local fadeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+                Services.TweenService:Create(notif, fadeInfo, { GroupTransparency = 1 }):Play()
+                task.wait(0.4)
+
+                notif:Destroy()
+            end)
+
+            return notif
+        end
+    end
 end
 
 return Library
