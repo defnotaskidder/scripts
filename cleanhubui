@@ -2631,37 +2631,4 @@ local Library; do
     end)
 end
 
-local Window = Library:CreateWindow({Icon = "rbxassetid://136503114086494", Size = UDim2.fromOffset(730, 550), Mobile = true})
-
-local Combat = Window:AddTab({Title = "Aimbot", MiscTitle = "Features", Description = "Powerful aim assistance and aim targeting system", Icon = "rbxassetid://6034509987"});
-local Visuals = Window:AddTab({Title = "Misc", MiscTitle = "Misc", Description = "Other features", Icon = "rbxassetid://90866260603437"});
-local Misc = Window:AddTab({Title = "Movement", MiscTitle = "Movement", Description = "Movement for moving", Icon = "rbxassetid://101162839973675"});
-
-local Section = Combat:AddSection({})
-
-Section:AddToggle({ Text = "Toggle", Default = false, Callback = print })
-Section:AddToggle({Text = "Enabled Toggle", Default = true, print })
-
-Section:AddSlider({Text = "Slider", Min = 0, Max = 100, Rounding = 5, Default = 50, Suffix ="%", Flag = "NewSlider2", Callback = print })
-Section:AddSlider({Text = "Slider", Min = 0, Max = 100, Rounding = 5, Default = 50, Suffix ="%", Flag = "New Slider1", Callback = print })
-Section:AddSlider({Text = "Slider", Min = 0, Max = 1000, Rounding = 0.1, Default = 1, Suffix ="m/s", Flag = "NewSLide43", print })
-
-Section:AddInput({Text = "Input", Placeholder = "Placeholder here...", FocusLost = true, ClearTextOnFocus = false, Callback = print})
-Section:AddDropdown({ Text = "Dropdown", Values = { "Option 1", "Option 2", "Option 3", "Option 4" }, Default ="Option 1", Multi = false, Callback = print })
-Section:AddDropdown({ Text = "Dropdown", Values = { "Option 1", "Option 2", "Option 3", "Option 4" }, Default ="Option 1", Multi = true, Callback = print })
-Section:AddDropdown({ Text = "Scrolling", Values = { "Option 1", "Option 2", "Option 3", "Option 4", "Option 5", "Option 6", "Option 7", "Option 8", "Option 9", "Option 10", "Option 11", "Option 12", "Option 13" }, Default ="Option 1", Multi = false, Callback = print })
-Section:AddLabel({Text = "This is a text label that can also be used as a paragraph. The quick brown fox jumps over the lazy dog.\nYou can also seperate lines\nLike this\nOr like this"})
-
-Section:AddButton({Text = "Button1", Confirmation = true, print})
-Section:AddButton({Text = "Button1", print}):AddButton({Text = "Button2", print})
-Section:AddButton({Text = "Button1", print}):AddButton({Text = "Button2", print}):AddButton({Text = "Button3", print})
-
-Section:AddKeyPicker({Text = "Keypicker element", Key = Enum.KeyCode.E, Mode = "Toggle", Active = false, Callback = print})
-
-Section:AddColorPicker({Text = "Colorpicker", Default = Color3.fromRGB(255, 0, 0), Transparency = 0.5, Callback = print})
-
-Window:InitPanels()
-
-task.wait(Library.TweeningSpeed)
-
-Library:AutoLoad()
+return Library
