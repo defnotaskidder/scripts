@@ -2644,9 +2644,9 @@ local Library; do
             local subtitle = Config.Subtitle or "Loading..."
             local logo = Config.Logo or Config.Icon or "rbxassetid://133116084704771"
             local duration = Config.Duration or 3
-            local fadeDuration = Config.FadeDuration or 0.6
+            local fadeDuration = Config.FadeDuration or 0.5
 
-            -- Main ScreenGui
+            -- Main ScreenGui (no black screen, just floating widget)
             local loadGui = Instance.new("ScreenGui")
             loadGui.Name = "CleanHubLoading"
             loadGui.DisplayOrder = 1000010
@@ -2656,149 +2656,173 @@ local Library; do
             pcall(function() loadGui.Parent = Services.CoreGui end)
             if not loadGui.Parent then loadGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-            -- Full screen overlay
-            local overlay = Instance.new("CanvasGroup")
-            overlay.Name = "Overlay"
-            overlay.Size = UDim2.new(1, 0, 1, 0)
-            overlay.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
-            overlay.BackgroundTransparency = 0
-            overlay.BorderSizePixel = 0
-            overlay.GroupTransparency = 0
-            overlay.Parent = loadGui
+            -- CanvasGroup for master fade (NO background, fully transparent)
+            local canvas = Instance.new("CanvasGroup")
+            canvas.Name = "Canvas"
+            canvas.Size = UDim2.new(1, 0, 1, 0)
+            canvas.BackgroundTransparency = 1
+            canvas.BorderSizePixel = 0
+            canvas.GroupTransparency = 1 -- starts invisible
+            canvas.Parent = loadGui
 
-            -- Subtle background gradient (radial feel using corner gradient)
-            local bgGrad = Instance.new("UIGradient")
-            bgGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 10, 20)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 8, 12)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 8))
+            -- Floating card (glassmorphism, centered)
+            local card = Instance.new("Frame")
+            card.Name = "Card"
+            card.AnchorPoint = Vector2.new(0.5, 0.5)
+            card.Position = UDim2.new(0.5, 0, 0.5, 15) -- starts slightly below center
+            card.Size = UDim2.new(0, 220, 0, 200)
+            card.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+            card.BackgroundTransparency = 0.15
+            card.BorderSizePixel = 0
+            card.Parent = canvas
+
+            local cardCorner = Instance.new("UICorner")
+            cardCorner.CornerRadius = UDim.new(0, 14)
+            cardCorner.Parent = card
+
+            -- Card accent stroke
+            local cardStroke = Instance.new("UIStroke")
+            cardStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            cardStroke.Thickness = 1
+            cardStroke.Transparency = 0.6
+            cardStroke.Parent = card
+
+            local cardStrokeGrad = Instance.new("UIGradient")
+            cardStrokeGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, accentLow),
+                ColorSequenceKeypoint.new(1, accentHigh)
             })
-            bgGrad.Rotation = 45
-            bgGrad.Parent = overlay
+            cardStrokeGrad.Rotation = 45
+            cardStrokeGrad.Parent = cardStroke
 
-            -- Center container
-            local center = Instance.new("Frame")
-            center.Name = "Center"
-            center.AnchorPoint = Vector2.new(0.5, 0.5)
-            center.Position = UDim2.new(0.5, 0, 0.5, 0)
-            center.Size = UDim2.new(0, 200, 0, 240)
-            center.BackgroundTransparency = 1
-            center.Parent = overlay
+            -- Top accent glow line on card
+            local topGlow = Instance.new("Frame")
+            topGlow.Name = "TopGlow"
+            topGlow.AnchorPoint = Vector2.new(0.5, 0)
+            topGlow.Position = UDim2.new(0.5, 0, 0, -1)
+            topGlow.Size = UDim2.new(0, 0, 0, 2) -- starts at 0 width
+            topGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            topGlow.BorderSizePixel = 0
+            topGlow.ZIndex = 5
+            topGlow.Parent = card
 
-            -- Outer spinning ring (accent gradient)
-            local ringSize = 90
+            local topGlowCorner = Instance.new("UICorner")
+            topGlowCorner.CornerRadius = UDim.new(1, 0)
+            topGlowCorner.Parent = topGlow
+
+            local topGlowGrad = Instance.new("UIGradient")
+            topGlowGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, accentLow),
+                ColorSequenceKeypoint.new(1, accentHigh)
+            })
+            topGlowGrad.Parent = topGlow
+
+            -- Spinning ring container
+            local ringSize = 70
             local ringContainer = Instance.new("Frame")
-            ringContainer.Name = "RingContainer"
+            ringContainer.Name = "Ring"
             ringContainer.AnchorPoint = Vector2.new(0.5, 0)
-            ringContainer.Position = UDim2.new(0.5, 0, 0, 10)
+            ringContainer.Position = UDim2.new(0.5, 0, 0, 24)
             ringContainer.Size = UDim2.new(0, ringSize, 0, ringSize)
             ringContainer.BackgroundTransparency = 1
-            ringContainer.Parent = center
+            ringContainer.Parent = card
 
-            -- Outer ring glow (larger, blurred circle behind)
+            -- Glow behind ring
             local ringGlow = Instance.new("ImageLabel")
-            ringGlow.Name = "RingGlow"
+            ringGlow.Name = "Glow"
             ringGlow.AnchorPoint = Vector2.new(0.5, 0.5)
             ringGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
-            ringGlow.Size = UDim2.new(1, 30, 1, 30)
+            ringGlow.Size = UDim2.new(1, 24, 1, 24)
             ringGlow.BackgroundTransparency = 1
             ringGlow.Image = "rbxassetid://4996891970"
             ringGlow.ImageColor3 = accentLow
-            ringGlow.ImageTransparency = 0.7
+            ringGlow.ImageTransparency = 0.75
             ringGlow.Parent = ringContainer
 
-            -- Ring track (dark circle outline)
-            local ringTrack = Instance.new("Frame")
-            ringTrack.Name = "RingTrack"
-            ringTrack.AnchorPoint = Vector2.new(0.5, 0.5)
-            ringTrack.Position = UDim2.new(0.5, 0, 0.5, 0)
-            ringTrack.Size = UDim2.new(1, 0, 1, 0)
-            ringTrack.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-            ringTrack.BackgroundTransparency = 0.3
-            ringTrack.Parent = ringContainer
+            -- Ring circle
+            local ring = Instance.new("Frame")
+            ring.Name = "Circle"
+            ring.AnchorPoint = Vector2.new(0.5, 0.5)
+            ring.Position = UDim2.new(0.5, 0, 0.5, 0)
+            ring.Size = UDim2.new(1, 0, 1, 0)
+            ring.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+            ring.BackgroundTransparency = 0.2
+            ring.Parent = ringContainer
 
-            local ringTrackCorner = Instance.new("UICorner")
-            ringTrackCorner.CornerRadius = UDim.new(1, 0)
-            ringTrackCorner.Parent = ringTrack
+            local ringCorner = Instance.new("UICorner")
+            ringCorner.CornerRadius = UDim.new(1, 0)
+            ringCorner.Parent = ring
 
+            -- Ring spinning stroke
             local ringStroke = Instance.new("UIStroke")
             ringStroke.Thickness = 2.5
-            ringStroke.Transparency = 0.2
+            ringStroke.Transparency = 0.15
             ringStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            ringStroke.Parent = ringTrack
+            ringStroke.Parent = ring
 
             local ringStrokeGrad = Instance.new("UIGradient")
             ringStrokeGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, accentLow),
-                ColorSequenceKeypoint.new(0.5, accentHigh),
-                ColorSequenceKeypoint.new(1, accentLow)
+                ColorSequenceKeypoint.new(0, accentHigh),
+                ColorSequenceKeypoint.new(0.3, accentLow),
+                ColorSequenceKeypoint.new(0.7, Color3.fromRGB(30, 30, 40)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 40))
             })
             ringStrokeGrad.Rotation = 0
             ringStrokeGrad.Parent = ringStroke
 
-            -- Logo image (centered inside ring)
+            -- Logo inside ring
             local logoImg = Instance.new("ImageLabel")
             logoImg.Name = "Logo"
             logoImg.AnchorPoint = Vector2.new(0.5, 0.5)
             logoImg.Position = UDim2.new(0.5, 0, 0.5, 0)
-            logoImg.Size = UDim2.new(0, 44, 0, 44)
+            logoImg.Size = UDim2.new(0, 34, 0, 34)
             logoImg.BackgroundTransparency = 1
             logoImg.Image = logo
             logoImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
             logoImg.ScaleType = Enum.ScaleType.Fit
-            logoImg.Parent = ringTrack
+            logoImg.Parent = ring
 
-            -- Title text
+            -- Title
             local titleLabel = Instance.new("TextLabel")
             titleLabel.Name = "Title"
             titleLabel.AnchorPoint = Vector2.new(0.5, 0)
-            titleLabel.Position = UDim2.new(0.5, 0, 0, 115)
-            titleLabel.Size = UDim2.new(1, 0, 0, 28)
+            titleLabel.Position = UDim2.new(0.5, 0, 0, 104)
+            titleLabel.Size = UDim2.new(1, -20, 0, 22)
             titleLabel.BackgroundTransparency = 1
             titleLabel.Text = title
-            titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            titleLabel.TextSize = 22
+            titleLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+            titleLabel.TextSize = 18
             titleLabel.Font = Enum.Font.GothamBold
-            titleLabel.TextTransparency = 0
-            titleLabel.Parent = center
+            titleLabel.Parent = card
 
-            local titleGrad = Instance.new("UIGradient")
-            titleGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(230, 230, 240)),
-                ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 255, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 220))
-            })
-            titleGrad.Parent = titleLabel
-
-            -- Subtitle / status text
+            -- Subtitle
             local subtitleLabel = Instance.new("TextLabel")
             subtitleLabel.Name = "Subtitle"
             subtitleLabel.AnchorPoint = Vector2.new(0.5, 0)
-            subtitleLabel.Position = UDim2.new(0.5, 0, 0, 146)
-            subtitleLabel.Size = UDim2.new(1, 0, 0, 18)
+            subtitleLabel.Position = UDim2.new(0.5, 0, 0, 128)
+            subtitleLabel.Size = UDim2.new(1, -20, 0, 16)
             subtitleLabel.BackgroundTransparency = 1
             subtitleLabel.Text = subtitle
-            subtitleLabel.TextColor3 = Color3.fromRGB(120, 120, 140)
-            subtitleLabel.TextSize = 12
+            subtitleLabel.TextColor3 = Color3.fromRGB(110, 110, 130)
+            subtitleLabel.TextSize = 11
             subtitleLabel.Font = Enum.Font.Gotham
-            subtitleLabel.Parent = center
+            subtitleLabel.Parent = card
 
-            -- Loading bar container
+            -- Progress bar
             local barContainer = Instance.new("Frame")
-            barContainer.Name = "BarContainer"
+            barContainer.Name = "Bar"
             barContainer.AnchorPoint = Vector2.new(0.5, 0)
-            barContainer.Position = UDim2.new(0.5, 0, 0, 180)
-            barContainer.Size = UDim2.new(0, 140, 0, 3)
-            barContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+            barContainer.Position = UDim2.new(0.5, 0, 0, 158)
+            barContainer.Size = UDim2.new(0, 120, 0, 3)
+            barContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
             barContainer.BackgroundTransparency = 0.3
             barContainer.BorderSizePixel = 0
-            barContainer.Parent = center
+            barContainer.Parent = card
 
             local barContCorner = Instance.new("UICorner")
             barContCorner.CornerRadius = UDim.new(1, 0)
             barContCorner.Parent = barContainer
 
-            -- Loading bar fill (animated sweep)
             local barFill = Instance.new("Frame")
             barFill.Name = "Fill"
             barFill.Size = UDim2.new(0, 0, 1, 0)
@@ -2817,20 +2841,20 @@ local Library; do
             })
             barGrad.Parent = barFill
 
-            -- Dots animation text (alternative to bar)
+            -- Dots text under bar
             local dotsLabel = Instance.new("TextLabel")
             dotsLabel.Name = "Dots"
             dotsLabel.AnchorPoint = Vector2.new(0.5, 0)
-            dotsLabel.Position = UDim2.new(0.5, 0, 0, 196)
-            dotsLabel.Size = UDim2.new(0, 40, 0, 14)
+            dotsLabel.Position = UDim2.new(0.5, 0, 0, 172)
+            dotsLabel.Size = UDim2.new(0, 30, 0, 14)
             dotsLabel.BackgroundTransparency = 1
             dotsLabel.Text = ""
-            dotsLabel.TextColor3 = Color3.fromRGB(90, 90, 110)
+            dotsLabel.TextColor3 = Color3.fromRGB(80, 80, 100)
             dotsLabel.TextSize = 14
             dotsLabel.Font = Enum.Font.GothamBold
-            dotsLabel.Parent = center
+            dotsLabel.Parent = card
 
-            -- Status update function
+            -- API object
             local loadingObj = {
                 Gui = loadGui,
                 SetStatus = function(_, text)
@@ -2846,130 +2870,124 @@ local Library; do
             -- === ANIMATIONS ===
             local animating = true
 
-            -- Ring rotation (continuous spinning gradient)
+            -- Ring spin (continuous)
             task.spawn(function()
                 while animating do
-                    TweenService:Create(ringStrokeGrad, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {
+                    TweenService:Create(ringStrokeGrad, TweenInfo.new(1, Enum.EasingStyle.Linear), {
                         Rotation = ringStrokeGrad.Rotation + 360
                     }):Play()
-                    task.wait(1.5)
+                    task.wait(1)
                 end
             end)
 
-            -- Ring glow pulse
+            -- Glow pulse
             task.spawn(function()
                 while animating do
-                    TweenService:Create(ringGlow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                        ImageTransparency = 0.4,
-                        Size = UDim2.new(1, 40, 1, 40)
+                    TweenService:Create(ringGlow, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        ImageTransparency = 0.45,
+                        Size = UDim2.new(1, 35, 1, 35)
                     }):Play()
-                    task.wait(1.2)
-                    TweenService:Create(ringGlow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                        ImageTransparency = 0.75,
-                        Size = UDim2.new(1, 25, 1, 25)
+                    task.wait(0.9)
+                    TweenService:Create(ringGlow, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        ImageTransparency = 0.8,
+                        Size = UDim2.new(1, 20, 1, 20)
                     }):Play()
-                    task.wait(1.2)
+                    task.wait(0.9)
                 end
             end)
 
-            -- Logo subtle pulse (breathe)
+            -- Logo breathe
             task.spawn(function()
                 while animating do
-                    TweenService:Create(logoImg, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                        Size = UDim2.new(0, 48, 0, 48)
+                    TweenService:Create(logoImg, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        Size = UDim2.new(0, 38, 0, 38)
                     }):Play()
-                    task.wait(1.5)
-                    TweenService:Create(logoImg, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                        Size = UDim2.new(0, 42, 0, 42)
+                    task.wait(1.2)
+                    TweenService:Create(logoImg, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        Size = UDim2.new(0, 32, 0, 32)
                     }):Play()
-                    task.wait(1.5)
+                    task.wait(1.2)
                 end
             end)
 
-            -- Dot animation
+            -- Dots cycle
             task.spawn(function()
                 local dots = {"", ".", "..", "..."}
                 local i = 1
                 while animating do
                     dotsLabel.Text = dots[i]
                     i = (i % #dots) + 1
-                    task.wait(0.4)
+                    task.wait(0.35)
                 end
             end)
 
-            -- Background gradient slow rotation
+            -- Stroke gradient slow rotate (border shimmer)
             task.spawn(function()
                 while animating do
-                    TweenService:Create(bgGrad, TweenInfo.new(4, Enum.EasingStyle.Linear), {
-                        Rotation = bgGrad.Rotation + 360
+                    TweenService:Create(cardStrokeGrad, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+                        Rotation = cardStrokeGrad.Rotation + 360
                     }):Play()
-                    task.wait(4)
+                    task.wait(3)
                 end
             end)
 
-            -- Entrance animation
+            -- === ENTRANCE ===
             task.spawn(function()
-                -- Elements start invisible
-                center.Position = UDim2.new(0.5, 0, 0.5, 20)
-
-                -- Fade overlay in
-                overlay.GroupTransparency = 0
-
-                -- Center slides up + elements appear
-                TweenService:Create(center, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                -- Fade in + float up
+                TweenService:Create(canvas, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    GroupTransparency = 0
+                }):Play()
+                TweenService:Create(card, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0.5, 0, 0.5, 0)
                 }):Play()
 
-                -- Bar fills over the duration
-                task.wait(0.3)
-                TweenService:Create(barFill, TweenInfo.new(duration - 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                -- Top glow line expands
+                task.wait(0.2)
+                TweenService:Create(topGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0.7, 0, 0, 2)
+                }):Play()
+
+                -- Start progress bar
+                task.wait(0.2)
+                TweenService:Create(barFill, TweenInfo.new(duration - 1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                     Size = UDim2.new(1, 0, 1, 0)
                 }):Play()
             end)
 
-            -- Close function
+            -- === CLOSE ===
             loadingObj.Close = function(_)
                 animating = false
 
-                -- Flash the ring
-                TweenService:Create(ringStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
-                    Transparency = 0,
-                    Thickness = 4
+                -- Ring flash
+                TweenService:Create(ringStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
+                    Transparency = 0, Thickness = 4
                 }):Play()
 
-                -- Complete progress bar
-                TweenService:Create(barFill, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+                -- Complete bar
+                TweenService:Create(barFill, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {
                     Size = UDim2.new(1, 0, 1, 0)
                 }):Play()
 
-                task.wait(0.35)
-
-                -- Flash white and fade out
-                local flash = Instance.new("Frame")
-                flash.Size = UDim2.new(1, 0, 1, 0)
-                flash.BackgroundColor3 = accentLow
-                flash.BackgroundTransparency = 1
-                flash.ZIndex = 10
-                flash.Parent = overlay
-
-                TweenService:Create(flash, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {
-                    BackgroundTransparency = 0.85
+                -- Glow line collapses
+                TweenService:Create(topGlow, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, 0, 0, 2)
                 }):Play()
-                task.wait(0.15)
 
-                -- Everything fades
-                TweenService:Create(overlay, TweenInfo.new(fadeDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                task.wait(0.3)
+
+                -- Card shrinks + fades up and out
+                TweenService:Create(card, TweenInfo.new(fadeDuration, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                    Position = UDim2.new(0.5, 0, 0.5, -25)
+                }):Play()
+                TweenService:Create(canvas, TweenInfo.new(fadeDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                     GroupTransparency = 1
-                }):Play()
-                TweenService:Create(center, TweenInfo.new(fadeDuration * 0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Position = UDim2.new(0.5, 0, 0.5, -20)
                 }):Play()
 
                 task.wait(fadeDuration + 0.1)
                 loadGui:Destroy()
             end
 
-            -- Auto-close after duration if not manually closed
+            -- Auto-close after duration
             if duration > 0 then
                 task.spawn(function()
                     task.wait(duration)
