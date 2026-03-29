@@ -2634,32 +2634,35 @@ local Library; do
 
     -- // Notification System
     do
-        local NotifGui = Library:Create("ScreenGui", {
-            Parent = Services.CoreGui,
-            Name = "\0",
-            Enabled = true,
-            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-            IgnoreGuiInset = true,
-            DisplayOrder = 1000002,
-        })
+        local TweenService = Services.TweenService
+        local accentLow = Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)
+        local accentHigh = Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242)
 
-        local NotifHolder = Library:Create("Frame", {
-            Parent = NotifGui.Instance,
-            BackgroundTransparency = 1,
-            AnchorPoint = Vector2.new(1, 1),
-            Position = UDim2.new(1, -24, 1, -24),
-            Size = UDim2.new(0, 320, 1, -48),
-            BorderSizePixel = 0,
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        })
+        local NotifGui = Instance.new("ScreenGui")
+        NotifGui.Name = "CleanHubNotifications"
+        NotifGui.Enabled = true
+        NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        NotifGui.IgnoreGuiInset = true
+        NotifGui.DisplayOrder = 1000002
+        NotifGui.ResetOnSpawn = false
+        pcall(function() NotifGui.Parent = Services.CoreGui end)
+        if not NotifGui.Parent then NotifGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-        Library:Create("UIListLayout", {
-            Parent = NotifHolder.Instance,
-            Padding = UDim.new(0, 10),
-            SortOrder = Enum.SortOrder.LayoutOrder,
-            VerticalAlignment = Enum.VerticalAlignment.Bottom,
-            HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        })
+        local NotifHolder = Instance.new("Frame")
+        NotifHolder.Name = "Holder"
+        NotifHolder.BackgroundTransparency = 1
+        NotifHolder.AnchorPoint = Vector2.new(1, 1)
+        NotifHolder.Position = UDim2.new(1, -20, 1, -20)
+        NotifHolder.Size = UDim2.new(0, 310, 1, -40)
+        NotifHolder.BorderSizePixel = 0
+        NotifHolder.Parent = NotifGui
+
+        local listLayout = Instance.new("UIListLayout")
+        listLayout.Padding = UDim.new(0, 10)
+        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+        listLayout.Parent = NotifHolder
 
         local notifCount = 0
 
@@ -2674,167 +2677,146 @@ local Library; do
             local duration = Data.Duration or 5
             local icon = Data.Icon or nil
 
-            notifCount += 1
+            notifCount = notifCount + 1
             local order = notifCount
 
-            -- Main container (CanvasGroup for GroupTransparency)
-            local notif = Instance.new("CanvasGroup")
-            notif.Name = "Notification_" .. order
-            notif.LayoutOrder = -order
-            notif.BackgroundTransparency = 1
-            notif.Size = UDim2.new(1, 0, 0, 0)
-            notif.AutomaticSize = Enum.AutomaticSize.Y
-            notif.GroupTransparency = 1
-            notif.Parent = NotifHolder.Instance
+            -- Clip container (for height expand animation)
+            local clipper = Instance.new("Frame")
+            clipper.Name = "NotifClip_" .. order
+            clipper.LayoutOrder = -order
+            clipper.BackgroundTransparency = 1
+            clipper.Size = UDim2.new(1, 0, 0, 0) -- starts at 0 height
+            clipper.ClipsDescendants = true
+            clipper.Parent = NotifHolder
 
-            -- Outer wrapper for slide + scale animation
-            local wrapper = Instance.new("Frame")
-            wrapper.Name = "Wrapper"
-            wrapper.Size = UDim2.new(1, 0, 0, 0)
-            wrapper.AutomaticSize = Enum.AutomaticSize.Y
-            wrapper.BackgroundTransparency = 1
-            wrapper.AnchorPoint = Vector2.new(0.5, 0.5)
-            wrapper.Position = UDim2.new(0.5, 40, 0.5, 0) -- start offset right
-            wrapper.Parent = notif
+            -- CanvasGroup for fade (GroupTransparency)
+            local canvas = Instance.new("CanvasGroup")
+            canvas.Name = "Canvas"
+            canvas.BackgroundTransparency = 1
+            canvas.Size = UDim2.new(1, 0, 0, 0)
+            canvas.AutomaticSize = Enum.AutomaticSize.Y
+            canvas.GroupTransparency = 1
+            canvas.Position = UDim2.new(1, 0, 0, 0) -- starts off-screen right
+            canvas.Parent = clipper
 
-            -- Glassmorphism background
+            -- Background (semi-transparent glassmorphism)
             local bg = Instance.new("Frame")
-            bg.Name = "Background"
+            bg.Name = "Bg"
             bg.Size = UDim2.new(1, 0, 0, 0)
             bg.AutomaticSize = Enum.AutomaticSize.Y
-            bg.BackgroundColor3 = Themes.Preset["Background"]
-            bg.BackgroundTransparency = 0.25
+            bg.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            bg.BackgroundTransparency = 0.2
             bg.BorderSizePixel = 0
-            bg.Parent = wrapper
+            bg.Parent = canvas
 
             local bgCorner = Instance.new("UICorner")
-            bgCorner.CornerRadius = UDim.new(0, 12)
+            bgCorner.CornerRadius = UDim.new(0, 10)
             bgCorner.Parent = bg
 
-            -- Subtle outer glow via drop shadow image
-            local shadow = Instance.new("ImageLabel")
-            shadow.Name = "Shadow"
-            shadow.BackgroundTransparency = 1
-            shadow.Position = UDim2.new(0, -15, 0, -12)
-            shadow.Size = UDim2.new(1, 30, 1, 27)
-            shadow.ZIndex = 0
-            shadow.Image = "rbxassetid://6015897843"
-            shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-            shadow.ImageTransparency = 0.5
-            shadow.ScaleType = Enum.ScaleType.Slice
-            shadow.SliceCenter = Rect.new(49, 49, 450, 450)
-            shadow.Parent = bg
+            -- Accent stroke (subtle gradient border)
+            local stroke = Instance.new("UIStroke")
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            stroke.Thickness = 1
+            stroke.Transparency = 0.65
+            stroke.Parent = bg
 
-            -- Accent glow line at top
+            local strokeGrad = Instance.new("UIGradient")
+            strokeGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, accentLow),
+                ColorSequenceKeypoint.new(1, accentHigh)
+            })
+            strokeGrad.Parent = stroke
+
+            -- Top accent glow line
             local glowLine = Instance.new("Frame")
-            glowLine.Name = "GlowLine"
-            glowLine.Size = UDim2.new(1, -24, 0, 2)
-            glowLine.Position = UDim2.new(0, 12, 0, 0)
+            glowLine.Name = "Glow"
+            glowLine.AnchorPoint = Vector2.new(0.5, 0)
+            glowLine.Position = UDim2.new(0.5, 0, 0, 0)
+            glowLine.Size = UDim2.new(0, 0, 0, 2) -- starts at 0 width for expand animation
             glowLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            glowLine.BackgroundTransparency = 0.15
+            glowLine.BackgroundTransparency = 0
             glowLine.BorderSizePixel = 0
             glowLine.ZIndex = 3
             glowLine.Parent = bg
 
             local glowCorner = Instance.new("UICorner")
-            glowCorner.CornerRadius = UDim.new(0, 1)
+            glowCorner.CornerRadius = UDim.new(1, 0)
             glowCorner.Parent = glowLine
 
             local glowGrad = Instance.new("UIGradient")
-            glowGrad.Color = ColorSeq{
-                ColorKey(0, Color3.fromRGB(0, 0, 0)),
-                ColorKey(0.1, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
-                ColorKey(0.9, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242)),
-                ColorKey(1, Color3.fromRGB(0, 0, 0)),
-            }
-            glowGrad.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 1),
-                NumberSequenceKeypoint.new(0.15, 0),
-                NumberSequenceKeypoint.new(0.85, 0),
-                NumberSequenceKeypoint.new(1, 1),
+            glowGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, accentLow),
+                ColorSequenceKeypoint.new(1, accentHigh)
             })
             glowGrad.Parent = glowLine
 
-            -- Accent stroke with gradient (thinner, more transparent)
-            local stroke = Instance.new("UIStroke")
-            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            stroke.Thickness = 1
-            stroke.Transparency = 0.7
-            stroke.Parent = bg
-
-            local strokeGrad = Instance.new("UIGradient")
-            strokeGrad.Color = ColorSeq{
-                ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
-                ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
-            }
-            strokeGrad.Parent = stroke
-
             -- Inner padding
-            local padding = Instance.new("UIPadding")
-            padding.PaddingTop = UDim.new(0, 14)
-            padding.PaddingBottom = UDim.new(0, 12)
-            padding.PaddingLeft = UDim.new(0, 14)
-            padding.PaddingRight = UDim.new(0, 14)
-            padding.Parent = bg
+            local pad = Instance.new("UIPadding")
+            pad.PaddingTop = UDim.new(0, 14)
+            pad.PaddingBottom = UDim.new(0, 12)
+            pad.PaddingLeft = UDim.new(0, 14)
+            pad.PaddingRight = UDim.new(0, 14)
+            pad.Parent = bg
 
             -- Content layout
-            local layout = Instance.new("UIListLayout")
-            layout.SortOrder = Enum.SortOrder.LayoutOrder
-            layout.Padding = UDim.new(0, 6)
-            layout.Parent = bg
+            local contentLayout = Instance.new("UIListLayout")
+            contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            contentLayout.Padding = UDim.new(0, 5)
+            contentLayout.Parent = bg
 
-            -- Top row (icon + title)
+            -- Title row
             local topRow = Instance.new("Frame")
             topRow.Name = "TopRow"
-            topRow.Size = UDim2.new(1, 0, 0, 18)
+            topRow.Size = UDim2.new(1, 0, 0, 16)
             topRow.BackgroundTransparency = 1
             topRow.LayoutOrder = 1
             topRow.Parent = bg
 
             -- Icon (optional)
+            local iconOffset = 0
             if icon then
                 local iconImg = Instance.new("ImageLabel")
                 iconImg.Name = "Icon"
-                iconImg.Size = UDim2.new(0, 16, 0, 16)
+                iconImg.Size = UDim2.new(0, 14, 0, 14)
                 iconImg.Position = UDim2.new(0, 0, 0.5, 0)
                 iconImg.AnchorPoint = Vector2.new(0, 0.5)
                 iconImg.BackgroundTransparency = 1
                 iconImg.Image = icon
-                iconImg.ImageColor3 = Themes.Preset["TextColor"]
+                iconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
                 iconImg.Parent = topRow
 
                 local iconGrad = Instance.new("UIGradient")
-                iconGrad.Color = ColorSeq{
-                    ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
-                    ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
-                }
+                iconGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, accentLow),
+                    ColorSequenceKeypoint.new(1, accentHigh)
+                })
                 iconGrad.Parent = iconImg
+                iconOffset = 20
             end
 
-            -- Title
+            -- Title label
             local titleLabel = Instance.new("TextLabel")
             titleLabel.Name = "Title"
-            titleLabel.Size = UDim2.new(1, icon and -22 or 0, 1, 0)
-            titleLabel.Position = UDim2.new(0, icon and 22 or 0, 0, 0)
+            titleLabel.Size = UDim2.new(1, -iconOffset, 1, 0)
+            titleLabel.Position = UDim2.new(0, iconOffset, 0, 0)
             titleLabel.BackgroundTransparency = 1
             titleLabel.Text = title
-            titleLabel.TextColor3 = Themes.Preset["TextColor"]
+            titleLabel.TextColor3 = Color3.fromRGB(230, 230, 235)
             titleLabel.TextXAlignment = Enum.TextXAlignment.Left
             titleLabel.TextSize = 13
             titleLabel.Font = Enum.Font.GothamBold
             titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
             titleLabel.Parent = topRow
 
-            -- Description
+            -- Description label
             if desc ~= "" then
                 local descLabel = Instance.new("TextLabel")
-                descLabel.Name = "Description"
+                descLabel.Name = "Desc"
                 descLabel.Size = UDim2.new(1, 0, 0, 0)
                 descLabel.AutomaticSize = Enum.AutomaticSize.Y
                 descLabel.BackgroundTransparency = 1
                 descLabel.Text = desc
-                descLabel.TextColor3 = Themes.Preset["TextLowContrast"]
-                descLabel.TextTransparency = 0.1
+                descLabel.TextColor3 = Color3.fromRGB(140, 140, 155)
                 descLabel.TextXAlignment = Enum.TextXAlignment.Left
                 descLabel.TextSize = 12
                 descLabel.Font = Enum.Font.Gotham
@@ -2843,27 +2825,26 @@ local Library; do
                 descLabel.Parent = bg
             end
 
-            -- Spacer before progress bar
+            -- Spacer
             local spacer = Instance.new("Frame")
-            spacer.Name = "Spacer"
             spacer.Size = UDim2.new(1, 0, 0, 2)
             spacer.BackgroundTransparency = 1
             spacer.LayoutOrder = 3
             spacer.Parent = bg
 
-            -- Progress bar (slimmer, rounded, glowing)
+            -- Progress bar
             local barBg = Instance.new("Frame")
-            barBg.Name = "BarBackground"
+            barBg.Name = "BarBg"
             barBg.Size = UDim2.new(1, 0, 0, 2)
-            barBg.BackgroundColor3 = Themes.Preset["ElementBackground"]
-            barBg.BackgroundTransparency = 0.5
+            barBg.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+            barBg.BackgroundTransparency = 0.4
             barBg.BorderSizePixel = 0
             barBg.LayoutOrder = 4
             barBg.Parent = bg
 
-            local barCorner = Instance.new("UICorner")
-            barCorner.CornerRadius = UDim.new(1, 0)
-            barCorner.Parent = barBg
+            local barBgCorner = Instance.new("UICorner")
+            barBgCorner.CornerRadius = UDim.new(1, 0)
+            barBgCorner.Parent = barBg
 
             local barFill = Instance.new("Frame")
             barFill.Name = "Fill"
@@ -2877,45 +2858,77 @@ local Library; do
             barFillCorner.Parent = barFill
 
             local barGrad = Instance.new("UIGradient")
-            barGrad.Color = ColorSeq{
-                ColorKey(0, Themes.Preset["AccentLow"] or Color3.fromRGB(90, 55, 255)),
-                ColorKey(1, Themes.Preset["AccentHigh"] or Color3.fromRGB(255, 55, 242))
-            }
+            barGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, accentLow),
+                ColorSequenceKeypoint.new(1, accentHigh)
+            })
             barGrad.Parent = barFill
 
             -- === ENTRANCE ANIMATION ===
-            -- Phase 1: Fade in + slide from right (0.45s, Back easing for overshoot)
-            local slideIn = TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0)
-            Services.TweenService:Create(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { GroupTransparency = 0 }):Play()
-            Services.TweenService:Create(wrapper, slideIn, { Position = UDim2.new(0.5, 0, 0.5, 0) }):Play()
-
-            -- Phase 2: Glow line shimmer (animated gradient offset)
             task.spawn(function()
-                task.wait(0.1)
-                Services.TweenService:Create(glowGrad, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Offset = Vector2.new(0.15, 0) }):Play()
-                task.wait(0.8)
-                Services.TweenService:Create(glowGrad, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Offset = Vector2.new(-0.15, 0) }):Play()
+                -- Measure the real content height
+                task.wait() -- let AutomaticSize calculate
+                local contentHeight = canvas.AbsoluteSize.Y
+                if contentHeight < 10 then contentHeight = 70 end
+
+                -- Phase 1: Expand height (notification grows into view)
+                TweenService:Create(clipper, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, 0, 0, contentHeight)
+                }):Play()
+
+                -- Phase 2: Slide in from right + fade in (slight delay)
+                task.wait(0.05)
+                TweenService:Create(canvas, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    GroupTransparency = 0,
+                    Position = UDim2.new(0, 0, 0, 0)
+                }):Play()
+
+                -- Phase 3: Glow line expands from center
+                task.wait(0.15)
+                TweenService:Create(glowLine, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(1, -20, 0, 2)
+                }):Play()
+
+                -- Phase 4: Glow line fades to subtle after expanding
+                task.wait(0.6)
+                TweenService:Create(glowLine, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    BackgroundTransparency = 0.5
+                }):Play()
             end)
 
             -- === COUNTDOWN + EXIT ===
             task.spawn(function()
-                -- Smooth countdown bar using tweens
-                local barTween = Services.TweenService:Create(barFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) })
+                -- Smooth progress bar countdown
+                local barTween = TweenService:Create(barFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+                    Size = UDim2.new(0, 0, 1, 0)
+                })
                 barTween:Play()
                 barTween.Completed:Wait()
 
-                -- Exit animation: slide right + fade out + slight scale down
-                local exitTime = 0.5
-                local exitInfo = TweenInfo.new(exitTime, Enum.EasingStyle.Back, Enum.EasingDirection.In, 0, false, 0)
-                local fadeInfo = TweenInfo.new(exitTime * 0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-                Services.TweenService:Create(wrapper, exitInfo, { Position = UDim2.new(0.5, 60, 0.5, 0) }):Play()
-                Services.TweenService:Create(notif, fadeInfo, { GroupTransparency = 1 }):Play()
-                task.wait(exitTime)
+                -- Exit Phase 1: Glow line collapses
+                TweenService:Create(glowLine, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, 0, 0, 2),
+                    BackgroundTransparency = 0
+                }):Play()
 
-                notif:Destroy()
+                -- Exit Phase 2: Slide out to right + fade
+                task.wait(0.08)
+                TweenService:Create(canvas, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    GroupTransparency = 1,
+                    Position = UDim2.new(1, 20, 0, 0)
+                }):Play()
+
+                -- Exit Phase 3: Collapse height
+                task.wait(0.25)
+                TweenService:Create(clipper, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Size = UDim2.new(1, 0, 0, 0)
+                }):Play()
+                task.wait(0.35)
+
+                clipper:Destroy()
             end)
 
-            return notif
+            return clipper
         end
     end
 end
