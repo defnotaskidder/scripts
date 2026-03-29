@@ -1863,11 +1863,13 @@ local Library; do
             end
 
             Cfg.Set = function(Bool)
+                Cfg.Enabled = Bool
+
                 Items.Outline:Tween({ BackgroundTransparency = Bool and 0 or 1 })
-                
+
                 Items.Outline.Instance.Rotation = -70
                 Items.Outline:Tween({Rotation = 0})
-                
+
                 Items.Tick:Tween({ImageTransparency = Bool and 0 or 1})
                 Items.Title:Tween({TextColor3 = Bool and Themes.Preset.TextColor or Themes.Preset.TextLowContrast})
 
