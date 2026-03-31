@@ -2656,13 +2656,12 @@ local Library; do
             pcall(function() gui.Parent = Services.CoreGui end)
             if not gui.Parent then gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-            -- Master canvas (for fade out only, starts visible)
-            local master = Instance.new("CanvasGroup")
+            -- Master frame (plain Frame to avoid CanvasGroup blur)
+            local master = Instance.new("Frame")
             master.Name = "Master"
             master.Size = UDim2.new(1, 0, 1, 0)
             master.BackgroundTransparency = 1
             master.BorderSizePixel = 0
-            master.GroupTransparency = 0
             master.Parent = gui
 
             -- =========================================
@@ -2672,7 +2671,7 @@ local Library; do
             card.Name = "Card"
             card.AnchorPoint = Vector2.new(0.5, 0.5)
             card.Position = UDim2.new(0.5, 0, 0.5, 0)
-            card.Size = UDim2.new(0, 340, 0, 120)
+            card.Size = UDim2.new(0, 360, 0, 126)
             card.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
             card.BackgroundTransparency = 0.08
             card.BorderSizePixel = 0
@@ -2719,7 +2718,7 @@ local Library; do
             accentLine.Name = "AccentLine"
             accentLine.AnchorPoint = Vector2.new(0.5, 0)
             accentLine.Position = UDim2.new(0.5, 0, 0, 0)
-            accentLine.Size = UDim2.new(0, 0, 0, 1.5)
+            accentLine.Size = UDim2.new(0, 0, 0, 2)
             accentLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             accentLine.BackgroundTransparency = 0.1
             accentLine.BorderSizePixel = 0
@@ -2795,12 +2794,13 @@ local Library; do
             logoImg.Name = "Logo"
             logoImg.AnchorPoint = Vector2.new(0.5, 0.5)
             logoImg.Position = UDim2.new(0.5, 0, 0.5, 0)
-            logoImg.Size = UDim2.new(0, 28, 0, 28)
+            logoImg.Size = UDim2.new(0, 34, 0, 34)
             logoImg.BackgroundTransparency = 1
             logoImg.Image = logo
             logoImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
-            logoImg.ImageTransparency = 0.05
+            logoImg.ImageTransparency = 0
             logoImg.ScaleType = Enum.ScaleType.Fit
+            logoImg.ResampleMode = Enum.ResamplerMode.Default
             logoImg.ZIndex = 3
             logoImg.Parent = leftSection
 
@@ -2824,28 +2824,28 @@ local Library; do
             titleLabel.Text = string.upper(title)
             titleLabel.TextColor3 = Color3.fromRGB(235, 235, 242)
             titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-            titleLabel.TextSize = 14
+            titleLabel.TextSize = 15
             titleLabel.Font = Enum.Font.GothamBold
             titleLabel.Parent = rightSection
 
             -- Subtitle
             local subtitleLabel = Instance.new("TextLabel")
             subtitleLabel.Name = "Subtitle"
-            subtitleLabel.Position = UDim2.new(0, 0, 0, 46)
+            subtitleLabel.Position = UDim2.new(0, 0, 0, 48)
             subtitleLabel.Size = UDim2.new(1, -12, 0, 16)
             subtitleLabel.BackgroundTransparency = 1
             subtitleLabel.Text = subtitle
-            subtitleLabel.TextColor3 = Color3.fromRGB(95, 95, 115)
+            subtitleLabel.TextColor3 = Color3.fromRGB(105, 105, 125)
             subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-            subtitleLabel.TextSize = 11
+            subtitleLabel.TextSize = 12
             subtitleLabel.Font = Enum.Font.Gotham
             subtitleLabel.Parent = rightSection
 
             -- Progress bar track
             local barTrack = Instance.new("Frame")
             barTrack.Name = "BarTrack"
-            barTrack.Position = UDim2.new(0, 0, 0, 74)
-            barTrack.Size = UDim2.new(1, -16, 0, 2)
+            barTrack.Position = UDim2.new(0, 0, 0, 78)
+            barTrack.Size = UDim2.new(1, -16, 0, 3)
             barTrack.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
             barTrack.BorderSizePixel = 0
             barTrack.Parent = rightSection
@@ -2876,13 +2876,13 @@ local Library; do
             -- Percentage text
             local pctLabel = Instance.new("TextLabel")
             pctLabel.Name = "Pct"
-            pctLabel.Position = UDim2.new(0, 0, 0, 82)
+            pctLabel.Position = UDim2.new(0, 0, 0, 88)
             pctLabel.Size = UDim2.new(1, -16, 0, 14)
             pctLabel.BackgroundTransparency = 1
             pctLabel.Text = "0%"
-            pctLabel.TextColor3 = Color3.fromRGB(65, 65, 80)
+            pctLabel.TextColor3 = Color3.fromRGB(75, 75, 95)
             pctLabel.TextXAlignment = Enum.TextXAlignment.Right
-            pctLabel.TextSize = 10
+            pctLabel.TextSize = 11
             pctLabel.Font = Enum.Font.GothamMedium
             pctLabel.Parent = rightSection
 
@@ -2939,12 +2939,12 @@ local Library; do
                 while animating do
                     TweenService:Create(logoImg, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                         ImageTransparency = 0,
-                        Size = UDim2.new(0, 30, 0, 30)
+                        Size = UDim2.new(0, 36, 0, 36)
                     }):Play()
                     task.wait(1.5)
                     TweenService:Create(logoImg, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                        ImageTransparency = 0.1,
-                        Size = UDim2.new(0, 26, 0, 26)
+                        ImageTransparency = 0.08,
+                        Size = UDim2.new(0, 32, 0, 32)
                     }):Play()
                     task.wait(1.5)
                 end
@@ -2968,7 +2968,7 @@ local Library; do
             -- === ENTRANCE (immediate) ===
             -- Accent line sweeps open
             TweenService:Create(accentLine, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0.6, 0, 0, 1.5)
+                Size = UDim2.new(0.6, 0, 0, 2)
             }):Play()
 
             -- === CLOSE ===
@@ -2977,7 +2977,7 @@ local Library; do
 
                 -- Accent line collapses
                 TweenService:Create(accentLine, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                    Size = UDim2.new(0, 0, 0, 1.5)
+                    Size = UDim2.new(0, 0, 0, 2)
                 }):Play()
 
                 -- Complete bar
@@ -2988,11 +2988,22 @@ local Library; do
 
                 task.wait(0.2)
 
+                -- Wrap card in a temporary CanvasGroup for the fade-out only
+                -- This avoids the CanvasGroup blur during normal display
+                local fadeCanvas = Instance.new("CanvasGroup")
+                fadeCanvas.Name = "FadeOut"
+                fadeCanvas.Size = UDim2.new(1, 0, 1, 0)
+                fadeCanvas.BackgroundTransparency = 1
+                fadeCanvas.BorderSizePixel = 0
+                fadeCanvas.GroupTransparency = 0
+                fadeCanvas.Parent = master
+                card.Parent = fadeCanvas
+
                 -- Card fades up + out
                 TweenService:Create(card, TweenInfo.new(fadeDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                     Position = UDim2.new(0.5, 0, 0.5, -15)
                 }):Play()
-                TweenService:Create(master, TweenInfo.new(fadeDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                TweenService:Create(fadeCanvas, TweenInfo.new(fadeDuration, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
                     GroupTransparency = 1
                 }):Play()
 
