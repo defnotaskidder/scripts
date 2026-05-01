@@ -3985,17 +3985,27 @@ function syde:Init(library)
 					end
 				end
 
-				-- Main input handler
+				-- Main input handler — accepts keyboard, gamepad, and mouse
 				syde:AddConnection(userinput.InputBegan, function(input)
-					if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+					local _it = input.UserInputType
+					if _it ~= Enum.UserInputType.Keyboard
+						and _it ~= Enum.UserInputType.Gamepad1
+						and _it ~= Enum.UserInputType.Gamepad2
+						and _it ~= Enum.UserInputType.MouseButton1
+						and _it ~= Enum.UserInputType.MouseButton2
+						and _it ~= Enum.UserInputType.MouseButton3
+					then return end
+
+					local bindable = (_it == Enum.UserInputType.Keyboard or _it == Enum.UserInputType.Gamepad1 or _it == Enum.UserInputType.Gamepad2)
+						and input.KeyCode or _it
 
 					if data.WaitingForKey then
 						data.WaitingForKey = false
-						SetKeybind(input.KeyCode)
+						SetKeybind(bindable)
 						return
 					end
 
-					if input.KeyCode == data.Key then
+					if bindable == data.Key then
 						data.Hold = true
 
 						local holdConnection
@@ -7812,28 +7822,39 @@ function syde:Init(library)
 				tweenservice:Create(KeyBind.Bind, TweenInfo.new(0.55, Enum.EasingStyle.Quint ), {Size = UDim2.new(0, KeyBind.Bind.v.TextBounds.X + 30, 0, KeyBind.Bind.Size.Y.Offset)}):Play()
 			end)
 
-			local function SetKeybind(keyCode)
-				if keyCode and keyCode ~= Enum.KeyCode.Unknown then
-					data.Key = keyCode
+			local function SetKeybind(keyOrInputType)
+				if keyOrInputType and keyOrInputType ~= Enum.KeyCode.Unknown then
+					data.Key = keyOrInputType
 					tweenservice:Create(KeyBind.Bind.UIStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Thickness = 0}):Play()
-					KeyBind.Bind.v.Text = keyCode.Name
+					KeyBind.Bind.v.Text = keyOrInputType.Name
 				else
 					data.Key = nil
 					KeyBind.Bind.v.Text = "NONE"
 				end
 			end
 
-			-- Main input handler
+			-- Main input handler — accepts keyboard, gamepad, and mouse
 			syde:AddConnection(userinput.InputBegan, function(input)
-				if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+				local _it = input.UserInputType
+				if _it ~= Enum.UserInputType.Keyboard
+					and _it ~= Enum.UserInputType.Gamepad1
+					and _it ~= Enum.UserInputType.Gamepad2
+					and _it ~= Enum.UserInputType.MouseButton1
+					and _it ~= Enum.UserInputType.MouseButton2
+					and _it ~= Enum.UserInputType.MouseButton3
+				then return end
+
+				-- Determine the bindable token: KeyCode for keyboard/gamepad, UserInputType for mouse
+				local bindable = (_it == Enum.UserInputType.Keyboard or _it == Enum.UserInputType.Gamepad1 or _it == Enum.UserInputType.Gamepad2)
+					and input.KeyCode or _it
 
 				if data.WaitingForKey then
 					data.WaitingForKey = false
-					SetKeybind(input.KeyCode)
+					SetKeybind(bindable)
 					return
 				end
 
-				if input.KeyCode == data.Key then
+				if bindable == data.Key then
 					data.Hold = true
 
 					local holdConnection
