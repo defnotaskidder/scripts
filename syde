@@ -1250,6 +1250,82 @@ do
 		Config.Accent = Config.Accent or syde.theme.Accent
 		Config.HitBox = Config.HitBox or syde.theme.HitBox
 
+		-- ──────────────────────────────────────────────────────────────
+		-- SKII HUB CUSTOM LOADER THEME: Red/Black gradient + Snow fall
+		-- ──────────────────────────────────────────────────────────────
+		pcall(function()
+			task.wait(0.05) -- let frames settle
+			local loaderFrame = LOADER:FindFirstChild("loader")
+			if not loaderFrame then return end
+
+			-- Apply red/black gradient to the main loader frame
+			local existingGrad = loaderFrame:FindFirstChildOfClass("UIGradient")
+			if existingGrad then existingGrad:Destroy() end
+			local grad = Instance.new("UIGradient")
+			grad.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0,    Color3.fromRGB(8, 6, 8)),
+				ColorSequenceKeypoint.new(0.55, Color3.fromRGB(28, 10, 16)),
+				ColorSequenceKeypoint.new(1,    Color3.fromRGB(60, 14, 22)),
+			})
+			grad.Rotation = 135
+			grad.Parent = loaderFrame
+
+			-- Tint all UIStrokes red
+			for _, obj in ipairs(LOADER:GetDescendants()) do
+				if obj:IsA("UIStroke") then
+					pcall(function() obj.Color = Color3.fromRGB(220, 38, 52) end)
+				end
+			end
+
+			-- Snow container (clip to loader bounds)
+			local snowHolder = Instance.new("Frame")
+			snowHolder.Name = "SkiiHubSnow"
+			snowHolder.Size = UDim2.new(1, 0, 1, 0)
+			snowHolder.BackgroundTransparency = 1
+			snowHolder.ClipsDescendants = true
+			snowHolder.ZIndex = 2
+			snowHolder.Parent = loaderFrame
+
+			-- Spawn 50 snowflakes
+			local flakes = {}
+			for i = 1, 50 do
+				local sz = math.random(2, 5)
+				local flake = Instance.new("Frame")
+				flake.Size = UDim2.new(0, sz, 0, sz)
+				flake.Position = UDim2.new(math.random(), 0, math.random() - 0.5, 0)
+				flake.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				flake.BackgroundTransparency = math.random(40, 75) / 100
+				flake.BorderSizePixel = 0
+				flake.ZIndex = 2
+				flake.Parent = snowHolder
+				Instance.new("UICorner", flake).CornerRadius = UDim.new(1, 0)
+				flakes[i] = {
+					f = flake,
+					speed = math.random(15, 50) / 100,
+					drift = (math.random() - 0.5) * 0.1,
+				}
+			end
+
+			-- Animate snow falling (auto-cleans when LOADER destroyed)
+			task.spawn(function()
+				local last = tick()
+				while LOADER and LOADER.Parent and snowHolder and snowHolder.Parent do
+					local now = tick()
+					local dt = now - last
+					last = now
+					for _, fl in ipairs(flakes) do
+						local pos = fl.f.Position
+						local newY = pos.Y.Scale + fl.speed * dt
+						local newX = pos.X.Scale + fl.drift * dt
+						if newY > 1.05 then newY = -0.05; newX = math.random() end
+						fl.f.Position = UDim2.new(newX, 0, newY, 0)
+					end
+					RunService.Heartbeat:Wait()
+				end
+			end)
+		end)
+		-- ────────────────── END CUSTOM THEME ──────────────────
+
 		LOADER.loader.profile.Title.TextTransparency = 1
 		LOADER.loader.profile.ImageTransparency = 1
 		LOADER.loader.profile.Title.Text = Config.Name
