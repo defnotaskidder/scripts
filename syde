@@ -5283,12 +5283,12 @@ function syde:Init(library)
 
 						if OptionText == data.StarterOption and not starterSet then
 							starterSet = true
-							dropdown.dropholder.drop.Selected.Text = OptionText
+							pcall(function() dropdown.dropholder.drop.selected.Text = OptionText end)
 							SelectedOptions = {[OptionText] = true}
 							SelectedOrder = {OptionText}
 
-							tweenservice:Create(option, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(39, 39, 39)}):Play()
-							tweenservice:Create(option.ImageLabel, TweenInfo.new(0.3), {ImageTransparency = 0}):Play()
+							pcall(function() tweenservice:Create(option, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(39, 39, 39)}):Play() end)
+							pcall(function() tweenservice:Create(option.ImageLabel, TweenInfo.new(0.3), {ImageTransparency = 0}):Play() end)
 						end
 
 						option.Interact.MouseButton1Click:Connect(function()
@@ -8735,12 +8735,12 @@ function syde:Init(library)
 
 					if OptionText == data.StarterOption and not starterSet then
 						starterSet = true
-						dropdown.dropholder.drop.Selected.Text = OptionText
+						pcall(function() dropdown.dropholder.drop.selected.Text = OptionText end)
 						SelectedOptions = {[OptionText] = true}
 						SelectedOrder = {OptionText}
 
-						tweenservice:Create(option, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(39, 39, 39)}):Play()
-						tweenservice:Create(option.ImageLabel, TweenInfo.new(0.3), {ImageTransparency = 0}):Play()
+						pcall(function() tweenservice:Create(option, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(39, 39, 39)}):Play() end)
+						pcall(function() tweenservice:Create(option.ImageLabel, TweenInfo.new(0.3), {ImageTransparency = 0}):Play() end)
 					end
 
 					option.Interact.MouseButton1Click:Connect(function()
