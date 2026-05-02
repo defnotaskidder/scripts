@@ -1186,7 +1186,11 @@ function syde:AddDrag(Object, Main, ConstrainToParent)
 					startFramePos.Y.Scale, startFramePos.Y.Offset + delta.Y
 				)
 
-				Main:TweenPosition(getConstrainedPosition(newPos), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, dragSpeed, true)
+				pcall(function()
+					if Main and Main.Parent then
+						Main:TweenPosition(getConstrainedPosition(newPos), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, dragSpeed, true)
+					end
+				end)
 			end
 		end
 	end)
