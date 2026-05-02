@@ -6399,6 +6399,18 @@ function syde:Init(library)
 			Description = 'Load all setting configurations.',
 			CallBack = function ()
 				syde:LoadSettingsConfig()
+				-- Also load user-script flags (Toggles/Sliders/Dropdowns with Flag = ...)
+				pcall(function() syde:LoadSaveConfig() end)
+			end
+		})
+		a:Button({
+			Title = 'Save',
+			Description = 'Save all script configurations.',
+			CallBack = function ()
+				pcall(function()
+					if SaveConfig then SaveConfig() end
+				end)
+				syde:Toast({ Content = 'Saved script config'; Duration = 3 })
 			end
 		})
 
